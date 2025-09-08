@@ -7,7 +7,7 @@ class User(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
     full_name: Mapped[str] = mapped_column(String(255), nullable=False)
-    password_hash: Mapped[str] = mapped_column(String(255), nullable=False, server_default="")
+    password_hash: Mapped[str] = mapped_column(String(255), nullable=False, default="")
     created_at: Mapped["DateTime"] = mapped_column(DateTime(timezone=True), server_default=func.now())
     assignments = relationship("Assignment", back_populates="user", cascade="all, delete-orphan")
 

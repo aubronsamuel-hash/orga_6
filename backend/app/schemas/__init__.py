@@ -6,7 +6,7 @@ class UserBase(BaseModel):
     full_name: str = Field(min_length=1, max_length=255)
 
 class UserCreate(UserBase):
-    pass
+    password: str | None = Field(default=None)
 
 class UserUpdate(BaseModel):
     full_name: str | None = Field(default=None, min_length=1, max_length=255)
