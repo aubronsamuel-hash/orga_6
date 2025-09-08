@@ -91,3 +91,18 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml --profile dev up 
 $id = docker ps --filter "label=com.docker.compose.service=api-dev" -q | Select-Object -First 1
 docker exec -it $id bash -lc "cd /app/backend && pytest -q"
 ```
+
+## STEP 04 - Frontend scaffold + Page Login
+Cette etape ajoute un frontend React avec une page de connexion.
+
+### Variables d'environnement
+```
+VITE_API_URL=http://localhost:8000
+```
+
+### Tests
+```
+PS> .\PS1\frontend_tests.ps1
+```
+
+L'e2e vise `http://localhost:8080/login` via `vite preview`. Adapter selon le reverse proxy.
