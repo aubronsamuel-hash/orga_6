@@ -1,5 +1,5 @@
 from __future__ import annotations
-import os
+import os, sys, pathlib
 from logging.config import fileConfig
 from sqlalchemy import engine_from_config, pool
 from alembic import context
@@ -12,8 +12,12 @@ config.set_main_option("sqlalchemy.url", db_url)
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-from app.db import Base  # noqa
-from app import models  # noqa
+# Ensure 'backend' root is on sys.path so `import app` works
+root = pathlib.Path(__file__).resolve().parents[1]
+sys.path.append(str(root))
+
+from app.db import Base  # type: ignore # noqa: E402
+from app import models  # type: ignore # noqa: E402
 
 target_metadata = Base.metadata
 
