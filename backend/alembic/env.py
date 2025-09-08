@@ -4,20 +4,32 @@ from logging.config import fileConfig
 from sqlalchemy import engine_from_config, pool
 from alembic import context
 
+# Alembic Config
 config = context.config
 
+# DB URL from env
 db_url = os.getenv("DATABASE_URL", "sqlite:///./dev.db")
 config.set_main_option("sqlalchemy.url", db_url)
 
+# Logging
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# Ensure 'backend' root is on sys.path so `import app` works
-root = pathlib.Path(__file__).resolve().parents[1]
-sys.path.append(str(root))
+# Make sure we can import `app` whether code sits at /app or /app/backend
+here = pathlib.Path(__file__).resolve()
+roots = {
+    here.parents[1],                  # .../backend
+    here.parents[2],                  # .../ (if env.py is /app/alembic)
+    pathlib.Path("/app/backend"),
+    pathlib.Path("/app"),
+}
+for p in roots:
+    sp = str(p)
+    if sp not in sys.path:
+        sys.path.append(sp)
 
-from app.db import Base  # type: ignore # noqa: E402
-from app import models  # type: ignore # noqa: E402
+from app.db import Base  # type: ignore
+from app import models    # type: ignore
 
 target_metadata = Base.metadata
 

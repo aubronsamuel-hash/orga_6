@@ -2,59 +2,59 @@ name: backend
 
 on:
   push:
-    branches: [ main ]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend.yml'
   pull_request:
-    branches: [ main ]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend.yml'
 
 jobs:
   backend:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: orga
+        options: >-
+          --health-cmd="pg_isready -U postgres -d orga" \
+          --health-interval=10s \
+          --health-timeout=5s \
+          --health-retries=10
+        ports:
+          - 5432:5432
     env:
-      COMPOSE_PROJECT_NAME: orga_ci
+      DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/orga
+      APP_ENV: ci
+      APP_DEBUG: 'false'
+      PYTHONPATH: backend:.
+      ALEMBIC_CONFIG: backend/alembic.ini
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-
-      - name: Validate .env.example exists and non-empty
+      - name: Install dependencies
         run: |
-          test -f .env.example || { echo '.env.example missing'; exit 1; }
-          if ! grep -q "[^[:space:]]" .env.example; then echo '.env.example empty'; exit 1; fi
-          cp .env.example .env
-
-      - name: Build and start stack
+          python -m pip install -U pip
+          pip install fastapi==0.112.2 uvicorn[standard]==0.30.6 SQLAlchemy==2.0.35 \
+                     pydantic==2.8.2 pydantic-settings==2.4.0 psycopg[binary]==3.2.1 \
+                     alembic==1.13.2 python-multipart==0.0.9 pytest
+      - name: Wait for Postgres
         run: |
-          docker compose up -d --build
-
-      - name: Wait for API container health
-        run: |
-          for i in {1..120}; do
-            state=$(docker inspect --format='{{json .State.Health.Status}}' orga_api 2>/dev/null || echo '"starting"')
-            echo "health=$state"
-            if [ "$state" = '"healthy"' ]; then exit 0; fi
+          for i in {1..60}; do
+            pg_isready -h localhost -U postgres -d orga && break
+            echo "waiting for postgres..."
             sleep 2
           done
-          echo 'API container not healthy in time'
-          docker compose logs --no-color > ci_docker_logs.txt || true
-          exit 1
-
-      - name: Curl health endpoint
+      - name: Apply migrations
         run: |
-          curl -f http://localhost:8000/health
-
-      - name: Upload logs artifact
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: backend-logs
-          path: ci_docker_logs.txt
-
-      - name: Tear down
-        if: always()
-        run: docker compose down -v
-
+          cd backend
+          alembic upgrade head
+      - name: Run tests
+        run: |
+          pytest -q backend/tests

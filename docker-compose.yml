@@ -1,41 +1,37 @@
 services:
   db:
-    image: postgres:15
-    container_name: orga_db
+    image: postgres:16-alpine
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-orga}
-      POSTGRES_USER: ${POSTGRES_USER:-orga}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-orga}
-    ports:
-      - "5432:5432"
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: orga
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d orga || exit 1"]
       interval: 5s
       timeout: 3s
-      retries: 20
-    volumes:
-      - db_data:/var/lib/postgresql/data
+      retries: 30
+    ports:
+      - "5432:5432"
 
   api:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: orga_api
-    env_file:
-      - ./.env
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      DATABASE_URL: postgresql+psycopg://postgres:postgres@db:5432/orga
+      APP_ENV: docker
+      APP_DEBUG: "false"
+      PYTHONPATH: /app/backend:/app
+      ALEMBIC_CONFIG: /app/backend/alembic.ini
+    working_dir: /app/backend
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8000/health || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 60
+    command: ["/bin/bash","-lc","./docker/entrypoint.sh"]
     ports:
       - "8000:8000"
-    command: >
-      bash -lc "
-        for i in {1..30}; do
-          alembic upgrade head && break || echo 'alembic not ready, retrying...';
-          sleep 2;
-        done;
-        exec uvicorn app.main:app --host ${APP_HOST:-0.0.0.0} --port ${APP_PORT:-8000}
-      "
-
-volumes:
-  db_data:
