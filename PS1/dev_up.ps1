@@ -1,24 +1,19 @@
+#!/usr/bin/env pwsh
 $ErrorActionPreference = "Stop"
+Write-Host "Starting db and api with migrations at boot..."
+docker compose up -d --build db api
 
-# 0) Ensure .env exists from .env.example
-if (-not (Test-Path ".env")) {
-  if (-not (Test-Path ".env.example")) { throw ".env.example missing" }
-  $content = Get-Content -Raw ".env.example"
-  if (-not ($content -match "\S")) { throw ".env.example empty" }
-  $content | Set-Content -NoNewline ".env"
-  Write-Host "Created .env from .env.example"
-}
-
-# 1) Build and start services
-Write-Host "Starting stack (db, api)..."
-docker compose up -d --build
-
-# 2) Wait for api health
-$max = 40
-for ($i=0; $i -lt $max; $i++) {
-  try {
-    $r = Invoke-WebRequest -Uri "http://localhost:8000/health" -UseBasicParsing -TimeoutSec 2
-    if ($r.StatusCode -eq 200) { Write-Host "API healthy"; break }
-  } catch {}
+$apiId = (docker compose ps -q api)
+for ($i=0; $i -lt 120; $i++) {
+  $state = docker inspect --format='{{json .State.Health.Status}}' $apiId 2>$null
+  if (-not $state) { $state = '"starting"' }
+  Write-Host "health=$state"
+  if ($state -eq '"healthy"') { break }
   Start-Sleep -Seconds 2
 }
+if ($state -ne '"healthy"') {
+  Write-Host "API container not healthy in time" -ForegroundColor Red
+  docker compose logs --no-color | Out-File -FilePath ci_docker_logs.txt -Encoding ascii
+  exit 1
+}
+Write-Host "API healthy."
