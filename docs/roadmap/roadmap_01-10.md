@@ -29,5 +29,33 @@ Ce dossier decrit la trajectoire de livraison fonctionnelle, sans mock, avec cri
 9. Import/Export CSV Employes v1
 10. Journalisation (Audit Log v1)
 
-Voir le detail complet dans `roadmap_01-10.md`.
+---
 
+### Etape 01 - Backend boot
+Objectif:
+- API FastAPI minimale avec `/health` et base de donnees Postgres via Alembic.
+
+Livrables:
+- FastAPI + settings via dataclass
+- Docker Compose (db, api)
+- Scripts PowerShell `dev_up`, `dev_down`, `backend_tests`, `smoke`
+- Migration Alembic `0001_init`
+- Test `tests/test_health.py`
+
+Scripts:
+- PS> .\PS1\dev_up.ps1
+- PS> .\PS1\backend_tests.ps1
+- PS> .\PS1\smoke.ps1
+- PS> .\PS1\dev_down.ps1
+
+Tests:
+- `pytest` dans le conteneur api
+
+CI Gates:
+- Job `backend`
+
+Acceptation:
+- `GET /health` retourne `{ "status": "ok" }`
+
+Notes:
+- Focalise sur compatibilite Windows et CI Linux.

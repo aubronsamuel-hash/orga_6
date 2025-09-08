@@ -1,7 +1,7 @@
 # AGENT SPEC
 
-VERSION: 0.2.0  
-CURRENT_TASK: agents/STEP_00_scaffold/AGENT.md  
+VERSION: 0.2.1  
+CURRENT_TASK: agents/STEP_01_Backend_boot_AGENT/AGENT.md  
 OWNER: Lead Engineer (responsable CI/CD et roadmap)  
 
 CONTEXT_DOCS:
@@ -186,5 +186,7 @@ STEP_ID: STEP_0N_short_title
 ---
 
 # CHANGELOG
+- 0.2.1 (2025-09-08): set CURRENT_TASK to STEP_01_Backend_boot_AGENT
+
 - 0.2.0 (2025-09-08): strengthen guards, stricter validation, PR template enriched, OWNER added  
 - 0.1.0 (init): initial agent scaffold and step template  
