@@ -6,6 +6,9 @@ on:
 
 jobs:
   checks:
+    defaults:
+      run:
+        shell: pwsh
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -13,7 +16,9 @@ jobs:
         run: pwsh PS1/repo_tree.ps1 && git diff --exit-code docs/REPO_TREE.md
       - name: Guards
         run: pwsh PS1/guards.ps1
-      - name: Env example
+      - name: .env.example sanity (robust)
         run: |
-          pwsh -Command "if (-not (Test-Path '.env.example')) { Write-Error '.env.example missing'; exit 1 }"
-          pwsh -Command "if (-not (Get-Content '.env.example' | Where-Object { $_ -match '\S' })) { Write-Error '.env.example empty'; exit 1 }"
+          if (-not (Test-Path '.env.example')) { throw '.env.example missing' }
+          $nonComment = Select-String -Path '.env.example' -Pattern '^\s*[^#]'
+          if (-not $nonComment) { throw '.env.example empty' }
+          if (-not (Select-String -Path '.env.example' -Pattern '^APP_ENV=')) { throw 'APP_ENV= missing in .env.example' }
