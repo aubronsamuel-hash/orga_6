@@ -43,3 +43,20 @@ Exemples rapides:
 - POST /users `{ "email": "u@ex.com", "full_name": "User" }`
 - GET /missions
 - POST /assignments `{ "user_id": 1, "mission_id": 1, "role": "Tech", "start_at": "2025-09-08T10:00:00Z", "end_at": "2025-09-08T18:00:00Z" }`
+
+### Utilisation locale rapide
+
+Option A (conserver les données de développement) :
+  - `setx POSTGRES_VERSION 15`
+  - `docker compose up -d db api`
+
+Option B (repartir de zéro, supprime les données dev) :
+  - `docker compose down -v`
+  - `docker volume prune` (optionnel)
+  - `docker compose up -d --build db api`
+
+Puis :
+  - `pwsh -File PS1/dev_up.ps1`
+  - `pwsh -File PS1/seed.ps1`
+  - `pwsh -File PS1/backend_tests.ps1`
+  - `pwsh -File PS1/smoke.ps1`

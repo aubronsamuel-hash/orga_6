@@ -39,8 +39,8 @@ jobs:
           python -m pip install -U pip
           pip install fastapi==0.112.2 uvicorn[standard]==0.30.6 SQLAlchemy==2.0.35 \
                      pydantic==2.8.2 pydantic-settings==2.4.0 email-validator==2.3.0 \
-                     psycopg[binary]==3.2.1 alembic==1.13.2 python-multipart==0.0.9 \
-                     httpx==0.28.1 pytest
+                     'psycopg[binary]==3.2.1' psycopg-binary==3.2.1 \
+                     alembic==1.13.2 python-multipart==0.0.9 httpx==0.28.1 pytest
       - name: Wait for Postgres
         run: |
           for i in {1..60}; do
