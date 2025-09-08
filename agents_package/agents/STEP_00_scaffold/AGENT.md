@@ -1,193 +1,215 @@
-# From roadmap: roadmap_01-10.md
-# Full title: 00 - Scaffold initial, guards et structure
-
 # AGENT SPEC
 
-VERSION: 0.2.0  
-CURRENT_TASK: agents/STEP_00_scaffold/AGENT.md  
-OWNER: Lead Engineer (responsable CI/CD et roadmap)  
+VERSION: 0.2.0
+CURRENT_TASK: agents/STEP_00_scaffold/AGENT.md
+OWNER: Lead Engineer (CI/CD, roadmap)
 
 CONTEXT_DOCS:
+- agent_md_from_scratch.md
+- AGENT.template.md
+- README.md
 - docs/roadmap/index.md
 - docs/roadmap/roadmap_01-10.md
-- README.md
 
 LANGUAGE_STYLE:
 - Prompts, code, commits, PRs: English
-- User docs, README: French
+- User docs: French
 - ASCII only. Deterministic outputs.
 
 CONSTRAINTS:
-- No secrets in repo. Use .env.example only.
+- No secrets in repo (.env.example only).
 - Windows-first (PowerShell 7+), CI parity Linux.
 - No TODOs left in committed code.
 - Respect acceptance criteria per step (Definition of Done).
 - Small, reversible, testable deltas.
 
-INPUTS_EXPECTED:
-- Active roadmap file(s) referenced in CONTEXT_DOCS
-- .env.example (no secrets)
-- CI workflows under .github/workflows
-
-OUTPUTS_REQUIRED:
-- Code + tests + docs that compile and run
-- Roadmap updated if scope changes
-- CHANGELOG entry in this file on every edit of rules or current task
-
 TOOLS_ALLOWED:
-- Backend: FastAPI, SQLAlchemy, Alembic, psycopg
-- Frontend: React, TypeScript, Vite, Tailwind, shadcn/ui, Playwright
-- Infra: Docker, Docker Compose, Caddy (optional), GitHub Actions
+- Infra: Docker, Docker Compose, GitHub Actions
 - Scripts: PowerShell 7+, Bash (in CI)
+- Backend/Frontend: placeholders only at this step (no app code yet)
 
 ---
 
 # DEFINITION_OF_DONE (DoD)
 
-- Lint/type/tests pass locally and in CI  
-- Local Gates: all PS1 scripts execute without error (dev_up, backend_tests, frontend_tests, smoke)  
-- Docs updated (README FR + roadmap) for any user-facing change  
-- No breaking change to previous steps unless migration+rollback provided  
-- Guards pass (docs_guard, roadmap_guard, any_guard, commit_guard, env_guard, changelog_guard, script_guard, schema_guard)  
+- All PS1 scripts in scope execute without error on Windows (pwsh 7+).
+- CI baseline passes on GitHub Actions (checks job).
+- Guards available and runnable (docs_guard, roadmap_guard, commit_guard, env_guard, changelog_guard, script_guard).
+- Docs updated (README + docs/roadmap/index.md) if scope modified.
+- No breaking change to subsequent steps expectations.
 
 ---
 
 # VALIDATION_SEQUENCE
 
-1. Local scripts: dev_up, lint, type, tests, smoke (Windows-first)  
-2. CI required jobs: backend, frontend, a11y, e2e-smoke  
-3. Security: pip-audit & npm audit (no HIGH severity)  
-4. Observability: health endpoint + /metrics stub reachable  
-5. Manual review checklist completed  
+1) Local Gates (Windows-first)
+- PS> .\PS1\dev_up.ps1
+- PS> .\PS1\smoke.ps1
+- PS> .\PS1\guards.ps1
+
+2) CI
+- Required: checks (lint shell, repo tree gen, guards run)
+
+3) Security
+- None at this step beyond no secrets check
 
 ---
 
 # REVIEW_CHECKLIST
 
-- Conventional Commits respected  
-- Coverage: backend >= 85%, frontend >= 80%  
-- No unapproved TS `any` (must have // ok-any: rationale)  
-- .env.example coherent, README updated if vars changed  
-- Roadmap sections in sync with delivered scope  
-- Rollback plan documented in PR  
+- Conventional Commits respected
+- .env.example present, no secrets
+- PS1 scripts ASCII-only, exit non-zero on failure
+- Repo tree generated and committed
+- Guards runnable locally and in CI
+- CI completes < 3 min
 
 ---
 
-# GUARD POLICIES
+# GUARD POLICIES (baseline at STEP 00)
 
-## docs_guard
-- Fail if AGENT.md changes without VERSION bump + CHANGELOG entry  
-- Fail if README FR mentions features not present in code  
+docs_guard
+- Fail if AGENT.md changed without VERSION bump + CHANGELOG entry in agent spec files.
 
-## roadmap_guard
-- Fail if a STEP_ID referenced in AGENT.md is missing in docs/roadmap  
-- Fail if index.md references a roadmap file missing in repo  
+roadmap_guard
+- Fail if docs/roadmap/index.md references nonexistent files.
 
-## any_guard (TypeScript)
-- Fail on `any` unless line has // ok-any: rationale  
+commit_guard
+- Fail if latest commit message is not Conventional Commits or contains "wip".
 
-## commit_guard
-- Fail if commit message not Conventional Commits or contains "wip"  
+env_guard
+- Fail if .env.example is missing or empty.
 
-## env_guard
-- Fail if new env var used in code but missing in .env.example + README  
+changelog_guard
+- Fail if agent_md_from_scratch.md CHANGELOG not enriched when AGENT rules change.
 
-## changelog_guard
-- Fail if CHANGELOG not enriched after AGENT.md changes  
+script_guard
+- Fail if any PS1 script contains "TODO:" string.
 
-## script_guard
-- Fail if any PS1 script contains "TODO:"  
-
-## schema_guard
-- Fail if DB schema drift detected (Alembic migration not applied)  
+Note: schema_guard not applicable at STEP 00 (no DB yet).
 
 ---
 
-# STEP TEMPLATE
+# STEP TEMPLATE (filled for STEP 00)
 
-## STEP_ID: STEP_XX_title
+## STEP_ID: STEP_00_scaffold
+
 GOAL:
-- Value delivered to user
+- Provide a clean, runnable repository scaffold with scripts, guards, CI baseline, and docs so that STEP 01 can add backend boot without restructuring.
 
-SCOPE:
-- Explicit tasks included  
-- Out of scope listed  
+SCOPE (included):
+- Repository skeleton: backend/, frontend/, PS1/, docs/, .github/workflows/, agents/, scripts to keep tree in sync.
+- PowerShell scripts (Windows-first):
+  - PS1/dev_up.ps1        -> environment checks, compose file presence check, friendly summary
+  - PS1/smoke.ps1         -> runs minimal no-op smoke (echo), validates repo tree file exists
+  - PS1/guards.ps1        -> orchestrates guard scripts
+  - PS1/docs_guard.ps1
+  - PS1/roadmap_guard.ps1
+  - PS1/commit_guard.ps1
+  - PS1/env_guard.ps1
+  - PS1/changelog_guard.ps1
+  - PS1/script_guard.ps1
+  - PS1/repo_tree.ps1     -> regenerates docs/REPO_TREE.md deterministically (ASCII)
+- CI baseline:
+  - .github/workflows/checks.yml with a single required job "checks" running on ubuntu-latest:
+    * repo tree generation (then fail if diff)
+    * run guards
+    * verify .env.example exists and has at least one var
+- Config/artifacts:
+  - .editorconfig, .gitattributes (normalize line endings), .gitignore
+  - .env.example (APP_ENV=dev)
+  - docs/REPO_TREE.md (autogenerated)
+  - README.md updated with usage of scripts and CI baseline
+- Agents/Docs:
+  - Keep agents/ contents synced; do not generate app code at this step.
+  - Ensure docs/roadmap/index.md references the 01-40 files correctly.
+
+OUT OF SCOPE:
+- No application code (no FastAPI, no React, no DB).
+- No Docker Compose services yet (only presence checks allowed).
+- No migrations, no test frameworks setup.
 
 ACCEPTANCE_CRITERIA:
-- Bullet list of verifiable checks (functional, tests, docs, guards)  
+- Running PS1/dev_up.ps1 prints environment summary and exits 0.
+- Running PS1/smoke.ps1 exits 0 and confirms docs/REPO_TREE.md is present.
+- Running PS1/guards.ps1 executes all guard scripts and exits 0 for a clean repo.
+- CI workflow "checks" passes on a clean main branch.
+- docs/REPO_TREE.md matches the working tree (no git diff after regeneration).
+- .env.example exists with at least one variable and no secrets.
 
 DELIVERABLES:
-- Code:  
-- Tests:  
-- Docs:  
-- Scripts:  
+- Code:
+  - PS1 scripts listed in SCOPE (ASCII only).
+  - .editorconfig, .gitattributes, .gitignore, .env.example
+  - .github/workflows/checks.yml
+- Tests:
+  - Guard scripts act as tests (fail on policy violations).
+- Docs:
+  - README.md section "STEP 00 - Scaffold"
+  - docs/REPO_TREE.md (generated)
+- Scripts:
+  - Provided in PS1/ and referenced in README usage examples.
 
-GUARDS:
-- docs_guard, roadmap_guard, any_guard, commit_guard, env_guard, changelog_guard, script_guard, schema_guard  
+GUARDS TO RUN:
+- docs_guard, roadmap_guard, commit_guard, env_guard, changelog_guard, script_guard
 
 LOCAL_COMMANDS (Windows-first):
-- PS> .\PS1\dev_up.ps1  
-- PS> .\PS1\backend_tests.ps1  
-- PS> .\PS1\frontend_tests.ps1  
-- PS> .\PS1\smoke.ps1  
+- PS> .\PS1\dev_up.ps1
+- PS> .\PS1\guards.ps1
+- PS> .\PS1\smoke.ps1
+- PS> .\PS1\repo_tree.ps1
 
 CI_JOBS_REQUIRED:
-- backend, frontend, a11y, e2e-smoke  
+- checks
 
 MIGRATIONS:
-- DB:  
-- Data:  
-- Config:  
+- DB: none
+- Data: none
+- Config: none
 
 ROLLBACK:
-- Steps to revert with minimal risk  
+- Revert the scaffold commit; no data impact.
 
 NOTES:
-- Windows-first compatibility required  
-- CI expected duration <5 min per job  
+- Keep execution time fast. No network calls in guards. Deterministic file ordering for repo tree.
 
 ---
 
 # PR DESCRIPTION TEMPLATE
 
 ## Step
-STEP_ID: STEP_0N_short_title  
+STEP_ID: STEP_00_scaffold
 
 ## Goal
-- ...  
+Provide a clean, runnable repository scaffold (scripts, guards, CI baseline, docs).
 
 ## Acceptance Criteria
-- ...  
+- PS1 scripts execute without error.
+- CI "checks" passes.
+- Guards pass locally and in CI.
+- docs/REPO_TREE.md has no drift.
 
 ## Deliverables
-- Code:  
-- Tests:  
-- Docs:  
-- Scripts:  
+- Code: PS1 guard suite, repo tree generator, CI workflow, dotfiles.
+- Tests: guard scripts acting as policy checks.
+- Docs: README section, docs/REPO_TREE.md.
+- Scripts: as listed.
 
 ## Migrations
-- DB:  
-- Config:  
-- Data:  
+None.
 
 ## Validation
-- Local: PS scripts run OK (dev_up, tests, smoke)  
-- CI: backend, frontend, a11y, e2e-smoke green  
-- Guards: docs_guard, roadmap_guard, any_guard, commit_guard, env_guard, changelog_guard, script_guard, schema_guard pass  
+- Local: dev_up, guards, smoke OK.
+- CI: checks green.
 
 ## Impacts Infra/DevOps
-- Compose, CI, scripts changes documented  
+- Introduces guard gate and repo tree drift check in CI.
 
 ## Rollback Plan
-- ...  
+- Revert single commit; no persistent state.
 
 ## Agent Updates
-- VERSION bump  
-- CURRENT_TASK updated  
-- CHANGELOG updated  
+- VERSION unchanged (0.2.0)
+- CURRENT_TASK remains for this step file
+- CHANGELOG already tracked in agent_md_from_scratch.md
 
----
-
-# CHANGELOG
-- 0.2.0 (2025-09-08): strengthen guards, stricter validation, PR template enriched, OWNER added  
-- 0.1.0 (init): initial agent scaffold and step template
