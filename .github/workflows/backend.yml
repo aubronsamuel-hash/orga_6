@@ -29,7 +29,6 @@ jobs:
       APP_ENV: ci
       APP_DEBUG: 'false'
       PYTHONPATH: backend:.
-      ALEMBIC_CONFIG: backend/alembic.ini
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -50,9 +49,8 @@ jobs:
             sleep 2
           done
       - name: Apply migrations
-        run: |
-          cd backend
-          alembic upgrade head
+        working-directory: backend
+        run: alembic -c alembic.ini upgrade head
       - name: Run tests
-        run: |
-          pytest -q backend/tests
+        working-directory: backend
+        run: pytest -q tests
