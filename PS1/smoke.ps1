@@ -1,17 +1,18 @@
 #!/usr/bin/env pwsh
 $ErrorActionPreference = "Stop"
 
-$Base = $env:SMOKE_BASE
-if (-not $Base) { $Base = "http://localhost:8000" }
+# Try a login request
+$Email = $env["SMOKE_EMAIL"]
+$Password = $env["SMOKE_PASSWORD"]
+if (-not $Email -or -not $Password) {
+  Write-Host "SMOKE_EMAIL/SMOKE_PASSWORD not set, skipping auth smoke"
+  exit 0
+}
 
-# Health
-$r = Invoke-RestMethod -Uri "$Base/health" -Method Get
-$r | ConvertTo-Json -Compress | Write-Output
-
-# Optional quick create if env present
-$Email = $env:SMOKE_EMAIL
-$Name  = $env:SMOKE_NAME
-if ($Email -and $Name) {
-  $body = @{ email = $Email; full_name = $Name } | ConvertTo-Json
-  Invoke-RestMethod -Uri "$Base/users" -Method Post -ContentType 'application/json' -Body $body | Out-Null
+try {
+  $resp = Invoke-RestMethod -Method Post -Uri "http://localhost:8000/auth/login" -ContentType "application/json" -Body (@{ email=$Email; password=$Password } | ConvertTo-Json)
+  if ($resp.access_token) { Write-Host "auth login OK"; exit 0 } else { Write-Error "no token"; exit 1 }
+} catch {
+  Write-Error $_
+  exit 1
 }
