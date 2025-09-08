@@ -1,0 +1,19 @@
+name: checks
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Repo tree
+        run: pwsh PS1/repo_tree.ps1 && git diff --exit-code docs/REPO_TREE.md
+      - name: Guards
+        run: pwsh PS1/guards.ps1
+      - name: Env example
+        run: |
+          pwsh -Command "if (-not (Test-Path '.env.example')) { Write-Error '.env.example missing'; exit 1 }"
+          pwsh -Command "if (-not (Get-Content '.env.example' | Where-Object { $_ -match '\S' })) { Write-Error '.env.example empty'; exit 1 }"
