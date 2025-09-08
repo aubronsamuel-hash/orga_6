@@ -61,6 +61,22 @@ Puis :
   - `pwsh -File PS1/backend_tests.ps1`
   - `pwsh -File PS1/smoke.ps1`
 
+## STEP 03 - Auth & Sessions
+Cette etape ajoute l'authentification via jetons JWT et le hachage des mots de passe.
+
+### Variables d'environnement
+- `JWT_SECRET` : cle de signature des tokens.
+- `JWT_EXPIRE_MINUTES` : duree de validite en minutes.
+
+### Scripts
+```
+PS> .\PS1\seed_user.ps1 -Email "admin@example.com" -Password "Passw0rd!" -FullName "Admin"
+PS> $env:SMOKE_EMAIL="admin@example.com"; $env:SMOKE_PASSWORD="Passw0rd!"; .\PS1\smoke.ps1
+```
+
+### Endpoint
+- `POST /auth/login`
+
 ## Local dev bootstrap (Windows)
 
 - Bootstrap host env:
