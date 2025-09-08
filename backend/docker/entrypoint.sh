@@ -4,12 +4,21 @@ set -euo pipefail
 # Ensure we are in backend dir
 cd /app/backend
 
-# Wait for DB if using Postgres
-if [[ "${DATABASE_URL:-}" == postgresql* ]]; then
+# Normalize DATABASE_URL for psycopg wait: convert sqlalchemy scheme to postgres uri
+DB_URL="${DATABASE_URL:-}"
+if [[ -n "$DB_URL" && "$DB_URL" == postgresql+psycopg://* ]]; then
+  DB_URL_PG="${DB_URL/postgresql+psycopg:/postgresql:}"
+else
+  DB_URL_PG="$DB_URL"
+fi
+export DB_URL_PG
+
+# Wait for DB (Postgres only)
+if [[ "${DB_URL_PG:-}" == postgresql* ]]; then
   python - <<'PY'
 import os, time
 import psycopg
-url=os.getenv("DATABASE_URL")
+url=os.environ.get("DB_URL_PG") or os.environ.get("DATABASE_URL")
 for i in range(60):
     try:
         with psycopg.connect(url, connect_timeout=3) as conn:
