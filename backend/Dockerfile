@@ -8,22 +8,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends libpq5 curl && 
 
 WORKDIR /app/backend
 
+# Install Python deps
+COPY backend/requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
+
 # Copy backend sources
 COPY backend/ /app/backend/
-
-# Install Python deps
-RUN pip install --no-cache-dir \
-    fastapi==0.112.2 \
-    uvicorn[standard]==0.30.6 \
-    SQLAlchemy==2.0.35 \
-    pydantic==2.8.2 \
-    pydantic-settings==2.4.0 \
-    email-validator==2.3.0 \
-    psycopg[binary]==3.2.1 \
-    psycopg-binary==3.2.1 \
-    alembic==1.13.2 \
-    python-multipart==0.0.9 \
-    httpx==0.28.1
 
 EXPOSE 8000
 CMD ["bash","-lc","./docker/entrypoint.sh"]

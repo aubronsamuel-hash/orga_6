@@ -59,3 +59,55 @@ Acceptation:
 
 Notes:
 - Focalise sur compatibilite Windows et CI Linux.
+
+### Etape 02 - Modele de donnees
+Objectif:
+- Introduire les tables User, Mission et Assignment pour la planification.
+
+Livrables:
+- Endpoints CRUD pour users, missions et assignments.
+- Migration Alembic initiale.
+- Tests de sante des endpoints.
+
+Scripts:
+- PS> .\PS1\backend_tests.ps1
+- PS> .\PS1\seed.ps1
+- PS> .\PS1\smoke.ps1
+
+Tests:
+- `pytest`
+
+CI Gates:
+- Job `backend`
+
+Acceptation:
+- CRUD basique sur users, missions et assignments.
+
+Notes:
+- Base pour les etapes suivantes.
+
+### Etape 03 - Auth & Sessions
+Objectif:
+- Authentifier les utilisateurs via JWT et proteger les routes.
+
+Livrables:
+- Endpoint `POST /auth/login`
+- Dependence `get_current_user` pour routes protegees
+- Hachage des mots de passe via bcrypt
+- Script `seed_user.ps1`
+
+Scripts:
+- PS> .\PS1\seed_user.ps1 -Email "admin@example.com" -Password "Passw0rd!" -FullName "Admin"
+- PS> $env:SMOKE_EMAIL="admin@example.com"; $env:SMOKE_PASSWORD="Passw0rd!"; .\PS1\smoke.ps1
+
+Tests:
+- `tests/test_auth_login.py`
+
+CI Gates:
+- Job `backend`
+
+Acceptation:
+- `POST /auth/login` retourne un token JWT valide.
+
+Notes:
+- Changer `JWT_SECRET` en production.
