@@ -60,3 +60,21 @@ Puis :
   - `pwsh -File PS1/seed.ps1`
   - `pwsh -File PS1/backend_tests.ps1`
   - `pwsh -File PS1/smoke.ps1`
+
+## Local dev bootstrap (Windows)
+
+- Bootstrap host env:
+```
+pwsh -File PS1/dev_bootstrap.ps1
+pwsh -File PS1/backend_tests.ps1
+```
+
+- Optional dev container (pytest inside image):
+```
+docker compose -f docker-compose.yml -f docker-compose.dev.yml --profile dev up -d --build db api-dev
+
+# run tests inside container if needed
+
+$id = docker ps --filter "label=com.docker.compose.service=api-dev" -q | head -n1
+docker exec -it $id bash -lc "cd /app/backend && pytest -q"
+```
