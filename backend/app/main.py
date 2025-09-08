@@ -1,8 +1,12 @@
 from fastapi import FastAPI
-from .core.settings import settings
+from .routers import users, missions, assignments
 
-app = FastAPI(title="Orga API", version="0.1.0")
+app = FastAPI(title="Orga API")
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "env": settings.APP_ENV}
+    return {"status": "ok"}
+
+app.include_router(users.router)
+app.include_router(missions.router)
+app.include_router(assignments.router)
