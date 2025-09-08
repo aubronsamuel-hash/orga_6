@@ -16,7 +16,9 @@ $ErrorActionPreference = "Stop"
 
 # 1) venv
 if (-not (Test-Path ".venv")) { python -m venv .venv }
-. .\.venv\Scripts\Activate.ps1
+$venv = Join-Path (Get-Location) ".venv"
+$activate = Join-Path $venv "Scripts/Activate.ps1"
+. $activate
 python -m pip install -U pip
 
 # 2) deps
@@ -24,8 +26,9 @@ if (Test-Path "backend/requirements-dev.txt") {
   pip install -r backend/requirements-dev.txt
 } else {
   pip install fastapi==0.112.2 uvicorn[standard]==0.30.6 SQLAlchemy==2.0.35 `
-              pydantic==2.8.2 pydantic-settings==2.4.0 psycopg-binary==3.2.1 `
-              alembic==1.13.2 python-multipart==0.0.9 pytest httpx
+              pydantic==2.8.2 pydantic-settings==2.4.0 email-validator>=2.2.0 `
+              'psycopg[binary]==3.2.10' alembic==1.13.2 python-multipart==0.0.9 `
+              PyJWT==2.9.0 bcrypt==4.2.0 pytest httpx
 }
 
 # 3) DB URL (default to sqlite file)
